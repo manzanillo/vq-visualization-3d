@@ -49,21 +49,27 @@
       var container, stats
       var camera, scene, renderer
       var particles
-      var dataPoints
+      var dataPoints,
+        prototypes = []
       var particlePositions, particleColors
       var width, height, maxParticleCount
       var r = 255,
-        rHalf = r / 2 // for colors
-
+        rHalf = r / 2
+      var numberOfPrototypes = 20
+      var geometry
       var effectController = {
         showDots: true,
-        speed: 50
+        speed: 50,
+        numberPrototypes: 5
       }
+
+      var nextBatchToAnimate = 0,
+        elementsPerBatch = 50
 
       function loadImg() {
         return new Promise((resolve, reject) => {
           var theImage = new Image()
-          theImage.src = './img/sunflower.jpg'
+          theImage.src = './img/newyork.jpg'
           theImage.onload = function() {
             var canvas = document.createElement('canvas')
             var context = canvas.getContext('2d')
@@ -89,7 +95,14 @@
           gui.add(effectController, 'showDots').onChange(function(value) {
             dataPoints.visible = value
           })
+
           gui.add(effectController, 'speed', 1, 100)
+
+          gui
+            .add(effectController, 'numberPrototypes', 1, 100)
+            .onChange(function(value) {
+              numberOfPrototypes = value
+            })
         }
 
         function init() {
@@ -120,6 +133,7 @@
           helper.material.transparent = true
           group.add(helper)
 
+          // process data points
           particles = new THREE.BufferGeometry()
           particlePositions = new Float32Array(maxParticleCount * 3)
           particleColors = new Float32Array(maxParticleCount * 3)
@@ -158,6 +172,30 @@
           dataPoints = new THREE.Points(particles, material)
           group.add(dataPoints)
 
+          // create prototypes
+          var prototypeMaterial = new THREE.SpriteMaterial({
+            color: 0xffffff,
+            program: function(context) {
+              context.beginPath()
+              context.arc(0, 0, 0.5, 0, Math.PI * 2, true)
+              context.fill()
+            }
+          })
+
+          geometry = new THREE.Geometry()
+
+          var prototype
+          for (var i = 0; i < numberOfPrototypes; i++) {
+            prototype = new THREE.Sprite(prototypeMaterial)
+            prototype.position.x = Math.random() * r - rHalf
+            prototype.position.y = Math.random() * r - rHalf
+            prototype.position.z = Math.random() * r - rHalf
+            prototype.scale.x = prototype.scale.y = 10
+            scene.add(prototype)
+            prototypes.push(prototype)
+            geometry.vertices.push(prototype.position)
+          }
+
           renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
           renderer.setPixelRatio(window.devicePixelRatio)
           renderer.setSize(window.innerWidth, window.innerHeight)
@@ -176,11 +214,50 @@
         }
 
         function animate() {
-          for (var i = 0; i < maxParticleCount; i++) {
+          for (var i = nextBatchToAnimate; i < nextBatchToAnimate + 200; i++) {
             // get the particle
-          }
+            var x = particlePositions[i * 3]
+            var y = particlePositions[i * 3 + 1]
+            var z = particlePositions[i * 3 + 2]
+            if (i < 1) {
+              console.log(x)
+            }
+            // get closest Prototype
+            var minDistance = 9999999
+            var minElement
+            prototypes.forEach(function(prototype) {
+              var dist = Math.sqrt(
+                Math.pow(prototype.position.x - x, 2) +
+                  Math.pow(prototype.position.y - y, 2) +
+                  Math.pow(prototype.position.z - z, 2)
+              )
+              if (dist < minDistance) {
+                minDistance = dist
+                minElement = prototype
+              }
+            })
+            if (i < 1) {
+              console.log(minElement)
+              console.log('minElement.position.x   ' + minElement.position.y)
+              console.log('x   ' + y)
+              console.log(
+                minElement.position.y + (x - minElement.position.y) / 2
+              )
+            }
+            minElement.position.x =
+              minElement.position.x + (x - minElement.position.x) / 2
+            minElement.position.y =
+              minElement.position.y + (y - minElement.position.y) / 2
+            minElement.position.z =
+              minElement.position.z + (z - minElement.position.z) / 2
 
-          //  dataPoints.geometry.attributes.position.needsUpdate = true
+            if (i < 1) {
+              //    console.log(minElement)
+            }
+          }
+          nextBatchToAnimate = nextBatchToAnimate + elementsPerBatch
+
+          geometry.verticesNeedUpdate = true
 
           requestAnimationFrame(animate)
 
@@ -198,7 +275,7 @@
         function render() {
           var time = Date.now() * 0.001
 
-          group.rotation.y = time * 0.1
+          //    group.rotation.y = time * 0.1
           renderer.render(scene, camera)
         }
       })
