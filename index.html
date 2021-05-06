@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>LVQ with Images</title>
+    <title>VQ with Images</title>
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -62,7 +62,7 @@
       var effectController = {
         showDots: true,
         speed: 50,
-        numberPrototypes: 5
+        numberPrototypes: 5,
       }
 
       var nextBatchToAnimate = 0,
@@ -72,7 +72,7 @@
         return new Promise((resolve, reject) => {
           var theImage = new Image()
           theImage.src = './img/sunflower.jpg'
-          theImage.onload = function() {
+          theImage.onload = function () {
             var canvas = document.createElement('canvas')
             var context = canvas.getContext('2d')
             context.drawImage(theImage, 0, 0)
@@ -85,7 +85,7 @@
       }
 
       var pixels = loadImg()
-      pixels.then(function(res) {
+      pixels.then(function (res) {
         var pixels = res
 
         init()
@@ -94,17 +94,17 @@
         function initGUI() {
           var gui = new GUI()
 
-          gui.add(effectController, 'showDots').onChange(function(value) {
+          gui.add(effectController, 'showDots').onChange(function (value) {
             dataPoints.visible = value
           })
 
-          gui.add(effectController, 'speed', 1, 100)
+          //gui.add(effectController, 'speed', 1, 100)
 
-          gui
+          /*  gui
             .add(effectController, 'numberPrototypes', 1, 100)
-            .onChange(function(value) {
+            .onChange(function (value) {
               numberOfPrototypes = value
-            })
+            })*/
         }
 
         function init() {
@@ -167,7 +167,7 @@
 
           var material = new THREE.PointsMaterial({
             size: 3,
-            vertexColors: THREE.VertexColors
+            vertexColors: THREE.VertexColors,
           })
 
           // create data points
@@ -177,11 +177,11 @@
           // create prototypes
           var prototypeMaterial = new THREE.SpriteMaterial({
             color: 0xffffff,
-            program: function(context) {
+            program: function (context) {
               context.beginPath()
               context.arc(0, 0, 0.5, 0, Math.PI * 2, true)
               context.fill()
-            }
+            },
           })
 
           geometry = new THREE.Geometry()
@@ -227,7 +227,7 @@
             // get closest Prototype
             var minDistance = 9999999
             var minElement
-            prototypes.forEach(function(prototype) {
+            prototypes.forEach(function (prototype) {
               var dist = Math.sqrt(
                 Math.pow(prototype.position.x - x, 2) +
                   Math.pow(prototype.position.y - y, 2) +
